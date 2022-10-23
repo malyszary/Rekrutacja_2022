@@ -1,0 +1,138 @@
+def mozliwe_drogi(start, graf_list):
+    #zwraca liste tupli, (poczatek, koniec)
+    lista_mozliwoasci = []
+    for i in graf_list:
+        if i[0] == start:
+            lista_mozliwoasci.append(i[-1])
+    return lista_mozliwoasci
+
+def laczenie_znakow(a, b):
+    #zwarca ciag znakow zrobiony z dwoch ciagow znakow
+    return a + b
+
+def czy_ma_powtorke(lista):
+    #zwraca prawde jezeli lista podana jako argument ma powtorki
+    lista_pomocnicza = []
+    for i in lista:
+        if i in lista_pomocnicza:
+            return True
+        else:
+            lista_pomocnicza.append(i)
+    return False 
+
+def znajdz_najkrotsza(slownik):
+    #zwraca slownik, ktorego argumentami sa najkrotsze drogi, a wartosciami najmniejsze wrtosci drog
+    vals = list(slownik.values())
+    min_val = [vals[0]]
+    slownik_wyjsciowy = {}
+    for val in vals:
+        if val < min_val[0]:
+            for i in min_val:
+                min_val.remove(i)
+            min_val.append(val)
+        elif val > min_val[0]:
+            continue
+        else:
+            min_val.append(val)
+
+    for key in slownik.keys():
+        if slownik[key] == min_val[0]:
+            slownik_wyjsciowy[key] = min_val[0]
+        else:
+            continue
+    return slownik_wyjsciowy
+
+#zmienne uzywane do konca
+if __name__ == '__main__':
+    graf = {
+  ("B", "D"): 2,
+  ("D", "A"): 1,
+  ("B", "A"): 4,
+  ("A", "C"): 2,
+  ("B", "E"): 3,
+  ("C", "D"): 7,
+  ("E", "C"): 3
+} 
+    list_d = list(graf)
+    path = ('A', 'D')
+    start = path[0]
+    end = path[-1]
+    lista_przejsc = []
+    zakonczone_drogi = []
+    flaga = True
+
+    #poczatek dzialania programu
+    mozliwe_d = mozliwe_drogi(start, list_d)
+
+    print(mozliwe_d) #pomocniczy print
+
+    #twozymy ciagi znakow w parach (start)-(gdzie mozna pojsc)
+    for i in mozliwe_d:
+        ciag1 = laczenie_znakow(start, i)
+        lista_przejsc.append(ciag1)
+
+    print(lista_przejsc)  #pomocniczy print
+
+    #petla glowna
+    while flaga:
+
+        for item in lista_przejsc:
+            #biezemy pod uwage tylko ostatnia wartosc z listy
+            koniec_chyba = item[-1]  
+            if koniec_chyba == end: #jezeli to punkt, dokad szlismy, to dodajemy ja do listy zakonczonych drog 
+                zakonczone_drogi.append(item)
+            if czy_ma_powtorke(list(item)): #jezeli punkt sie powtarza, to wracamy do punktu startowego, 
+            #czyli dotrzymamy niekoczaca sie petle - zeby tego uniknac usuwamy ja
+                lista_przejsc.remove(item)
+
+        l_prz_1 = lista_przejsc[::]
+
+        for para in l_prz_1: #para tylko w pierwszej iteracji petli ;)
+            start = para[-1] #nadpisujemy start, zeby sprawdzic mozliwe przejscia od nowego punktu
+            mozliwe_d = mozliwe_drogi(start, list_d)
+            for punkt in mozliwe_d:
+                stara = para
+                if punkt in stara: #usuwamy powtorki
+                    del stara
+                else:
+                    lista_przejsc.append(para + punkt)
+
+        #nw czemu tylko to dziala do usuniecia niepotrzebnych elelemntow ale dziala xd
+        new_list = []
+        for item in lista_przejsc:
+            if item in l_prz_1: #odcinamy wartosci, ktore nie zakonczyly petli i nie zmienily sowjej wartosci
+                continue
+            else:
+                new_list.append(item)
+        lista_przejsc = new_list
+
+        if not lista_przejsc:
+                flaga = False
+
+    print(zakonczone_drogi) #pomocniczy print
+
+    lista_list_tupli = []
+    for trasa in zakonczone_drogi:
+        lista_tupli = []
+        for i in range(len(trasa)-1):
+            try:
+                tup = (trasa[i], trasa[i+1])
+            except:
+                pass
+            lista_tupli.append(tup)
+        lista_list_tupli.append(lista_tupli)
+
+    print(lista_list_tupli) #pomocniczy print
+
+    slownik_wynikow = {}
+
+    for lista in lista_list_tupli:
+        index_listy = lista_list_tupli.index(lista)
+        wynik = 0
+        for tupla in lista:
+            wynik += graf[tupla]
+        slownik_wynikow[zakonczone_drogi[index_listy]] = wynik
+
+    print(slownik_wynikow) #pomocniczy print
+
+    print(f'Najkrotsze trasy to: {znajdz_najkrotsza(slownik_wynikow)}') #mysle, ze to czytelene, ale ewentualnie np droga ABD == (A, B), (B, D)
